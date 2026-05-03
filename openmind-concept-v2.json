@@ -1,0 +1,406 @@
+{
+  "project": {
+    "name": "OpenMind",
+    "tagline": "Unified AI-native project operating system",
+    "owner": "Achim Imboden",
+    "version": "2.0",
+    "status": "architecture validated — build starting",
+    "created": "2026-04-11",
+    "revised": "2026-05-03",
+    "north_star": "Turn Achim's nonlinear thinking into linear career capital — without burning premium LLM tokens on housekeeping."
+  },
+
+  "owner": {
+    "name": "Achim Imboden",
+    "role": "Change management expert + AI Adoption Architect, University of Basel",
+    "technical_level": "Vibe coder — strong product instincts, comfortable with HTML/JS/CSS, learning backend",
+    "collaborator": "Sebastian (codebar) — Laravel/PHP expert, joins later phases"
+  },
+
+  "problem": {
+    "core": "Projects scattered across Claude projects, ChatGPT projects, Copilot sessions, and VS Code repos — no unified view, no persistent memory, no way to query across all work.",
+    "pain_points": [
+      "Every LLM conversation starts from zero",
+      "Project status lives in Achim's head, not in a system",
+      "Insights and decisions trapped in chat threads that expire",
+      "No portfolio view across all active projects",
+      "No semantic search across past thinking",
+      "Building tools instead of using them (meta-trap)"
+    ]
+  },
+
+  "vision": "One Supabase database that every AI tool reads and writes to. A web dashboard for visual project management. MCP as the bridge. LLM tokens reserved for thinking, never for housekeeping.",
+
+  "architecture": {
+    "principle": "Two data models in one database — relational PM tables for structured project work, Open Brain thoughts table for unstructured knowledge and semantic search. They coexist, they don't compete.",
+
+    "layer_1_brain": {
+      "name": "Supabase",
+      "role": "Single source of truth for all structured and unstructured data",
+      "plan": "Free tier (same project as existing sprint platform)",
+      "cost": "$0/month",
+      "contains": {
+        "relational_pm_tables": [
+          "projects — portfolio of all active work",
+          "tasks — actionable items with status, priority, deadlines",
+          "milestones — key dates and deliverables",
+          "meetings — notes, attendees, action items",
+          "contacts — people connected to projects",
+          "content_pipeline — ideas from draft to published",
+          "weekly_digests — generated synthesis outputs"
+        ],
+        "open_brain_layer": [
+          "thoughts — unstructured captures with vector embeddings",
+          "pgvector — semantic similarity search",
+          "auto-classified metadata — type, topics, people, action items"
+        ]
+      }
+    },
+
+    "layer_2_mcp": {
+      "name": "MCP Server (Supabase Edge Function)",
+      "role": "Bridge between LLMs and the database",
+      "tools_exposed": [
+        "capture_thought — save unstructured insight with auto-embedding",
+        "search_thoughts — semantic search across all thoughts",
+        "list_thoughts — browse recent captures filtered by type/topic",
+        "get_project — retrieve project status and tasks",
+        "update_project — change status, add notes",
+        "add_task — create task linked to project",
+        "thought_stats — overview of what's in the brain"
+      ],
+      "connected_clients": [
+        "Claude Desktop",
+        "Claude Code",
+        "ChatGPT",
+        "Copilot",
+        "VS Code (via Claude Code / Codex)"
+      ],
+      "fallback_capture": {
+        "why": "MCP is ideal but not always reliable across all clients",
+        "alternatives": [
+          "Web dashboard quick-capture form",
+          "Slack channel with webhook ingestion",
+          "Direct Supabase API calls",
+          "Drop folder on Mac Mini (Phase 5)"
+        ]
+      }
+    },
+
+    "layer_3_dashboard": {
+      "name": "Web Dashboard",
+      "role": "Visual project management interface — read-heavy, capture-light",
+      "hosting": "GitHub Pages (static) or Vercel",
+      "design_system": {
+        "fonts": ["Plus Jakarta Sans", "JetBrains Mono"],
+        "style": "Existing sprint platform design language",
+        "base": "project-detail.html already built"
+      },
+      "modules": {
+        "phase_1": [
+          "Project list (portfolio view)",
+          "Project detail (tabs: dashboard, deliverables, todos, timeline)",
+          "Quick capture form"
+        ],
+        "earned_later": [
+          "Calendar view — when deadline tracking becomes painful",
+          "Contact register — when Kindling bridge is needed",
+          "Roadmap/timeline — when 5+ projects are active",
+          "Content pipeline tracker — when publishing regularly",
+          "Search page — when 100+ thoughts accumulated",
+          "Weekly digest viewer — when 4+ digests exist"
+        ]
+      }
+    },
+
+    "layer_4_thinkers": {
+      "name": "LLM Tokens",
+      "role": "Premium intelligence — strategy, synthesis, content creation only",
+      "token_worthy": [
+        "Weekly signal digest synthesis",
+        "Strategic career analysis",
+        "Content creation (LinkedIn, articles, talks)",
+        "Consulting offer development",
+        "Architecture decisions",
+        "Deep research and reasoning"
+      ],
+      "not_token_worthy": [
+        "Embedding generation",
+        "Input classification and tagging",
+        "File organization",
+        "Routine metadata extraction"
+      ]
+    },
+
+    "layer_5_janitor": {
+      "name": "Mac Mini M1 + Ollama",
+      "role": "Local inference for embedding and classification — DEFERRED",
+      "status": "Phase 5+ only. Use OpenRouter initially (~$0.10-0.30/month). Build local layer when capturing 50+ thoughts/week.",
+      "already_installed": {
+        "ollama": "0.19.0",
+        "node": "v25.8.2",
+        "nomic_embed_text": "274MB",
+        "qwen2_5_3b": "1.9GB",
+        "tailscale": "1.96.4"
+      },
+      "when_to_activate": "When monthly OpenRouter cost exceeds $5 OR when file watcher ingestion is needed"
+    }
+  },
+
+  "database_schema": {
+    "extension": "CREATE EXTENSION IF NOT EXISTS vector;",
+    "tables": {
+      "projects": {
+        "purpose": "Portfolio of all active work",
+        "fields": ["id uuid PK", "code text UNIQUE", "title text", "status text (active/paused/completed/archived)", "description text", "objective text", "tags text[]", "current_phase text", "updated_at timestamptz", "created_at timestamptz"]
+      },
+      "tasks": {
+        "purpose": "Actionable items linked to projects",
+        "fields": ["id uuid PK", "project_id uuid FK→projects", "title text", "status text (open/in-progress/done/blocked)", "priority text (critical/high/medium/low)", "owner text", "due_date date", "estimated_effort text", "connected_to text", "created_at timestamptz"]
+      },
+      "milestones": {
+        "purpose": "Key dates, deliverables, deadlines",
+        "fields": ["id uuid PK", "project_id uuid FK→projects", "title text", "description text", "due_date date", "status text (planned/in-progress/completed)", "type text (deliverable/milestone/deadline)", "created_at timestamptz"]
+      },
+      "meetings": {
+        "purpose": "Meeting notes with extracted action items",
+        "fields": ["id uuid PK", "project_id uuid FK→projects (nullable)", "title text", "date timestamptz", "attendees text[]", "notes text", "action_items jsonb", "created_at timestamptz"]
+      },
+      "contacts": {
+        "purpose": "People connected to projects and work",
+        "fields": ["id uuid PK", "name text", "role text", "organization text", "email text", "tags text[]", "notes text", "project_ids uuid[]", "created_at timestamptz"]
+      },
+      "content_pipeline": {
+        "purpose": "Track content from idea to published",
+        "fields": ["id uuid PK", "title text", "content_type text (linkedin_post/article/talk/workshop)", "status text (idea/draft/review/published)", "body text", "source_thought_ids uuid[]", "published_url text", "published_at timestamptz", "created_at timestamptz"]
+      },
+      "weekly_digests": {
+        "purpose": "Generated weekly synthesis outputs",
+        "fields": ["id uuid PK", "week_number int", "year int", "themes text[]", "best_insight text", "linkedin_post text", "website_idea text", "offer_angle text", "unfinished_goldmines text[]", "next_move text", "created_at timestamptz", "UNIQUE(week_number, year)"]
+      },
+      "thoughts": {
+        "purpose": "Open Brain — unstructured captures with semantic search",
+        "fields": ["id uuid PK", "content text", "type text (insight/decision/idea/reflection/framework/meeting_note)", "source text (claude/chatgpt/copilot/slack/file_watcher/web)", "category text", "topics text[]", "people text[]", "action_items text[]", "project_id uuid FK→projects (nullable)", "embedding vector(768)", "idempotency_key text UNIQUE", "created_at timestamptz"],
+        "index": "CREATE INDEX ON thoughts USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);"
+      }
+    },
+    "rls": "Service role access only. Single-user system. RLS prevents accidental exposure via REST API."
+  },
+
+  "capture_flows": {
+    "primary": {
+      "name": "From any LLM via MCP",
+      "friction": "Under 30 seconds",
+      "flow": "Valuable thought → tell LLM 'save this to my brain' → MCP capture_thought → Supabase stores with embedding → searchable immediately"
+    },
+    "secondary": {
+      "name": "Web dashboard quick capture",
+      "friction": "Under 60 seconds",
+      "flow": "Open dashboard → click capture → type or paste → submit → stored in thoughts table"
+    },
+    "tertiary": {
+      "name": "Slack/Telegram channel",
+      "friction": "Under 15 seconds",
+      "flow": "Type thought in dedicated channel → webhook → Edge Function → auto-embedded and classified"
+    },
+    "bulk": {
+      "name": "Drop folder (Phase 5+)",
+      "friction": "Under 30 seconds",
+      "flow": "Save file to ~/openmind-inbox/ → file watcher → qwen2.5:3b extracts → nomic-embed-text embeds → Supabase stores"
+    }
+  },
+
+  "retrieval_flows": {
+    "semantic_search": {
+      "trigger": "Any LLM: 'What do I know about X?'",
+      "mechanism": "MCP search_thoughts → pgvector cosine similarity → top-k results returned to chat"
+    },
+    "project_status": {
+      "trigger": "Any LLM: 'What's the status of project Y?'",
+      "mechanism": "MCP get_project → returns project + tasks + recent milestones"
+    },
+    "dashboard_browse": {
+      "trigger": "Open web dashboard",
+      "mechanism": "Supabase client → SQL queries → rendered in project list/detail views"
+    }
+  },
+
+  "operating_cadence": {
+    "daily": {
+      "time_minutes": 5,
+      "actions": [
+        "Capture thoughts from LLM chats as they happen",
+        "Update task statuses if something shipped",
+        "Zero context switching — capture happens inside the tool you're already using"
+      ]
+    },
+    "weekly": {
+      "time_minutes": 30,
+      "actions": [
+        "Query brain: all thoughts from last 7 days",
+        "LLM synthesizes recurring themes and patterns",
+        "Generate weekly_signal_digest (themes, best insight, LinkedIn draft, next move)",
+        "Store digest in weekly_digests table",
+        "Pick ONE action for the week",
+        "Move one content idea to content_pipeline if ready"
+      ]
+    },
+    "monthly": {
+      "time_minutes": 60,
+      "actions": [
+        "Aggregate last 4 weekly digests",
+        "Semantic search for recurring theme clusters",
+        "Career direction check — is positioning still accurate?",
+        "Review and refine consulting offer concepts",
+        "Update profile/positioning thoughts",
+        "Set next month's strategic focus"
+      ]
+    }
+  },
+
+  "build_phases": {
+    "principle": "Build in concentric circles. Innermost circle first. Earn each expansion through real usage pain.",
+
+    "phase_1": {
+      "name": "Supabase schema + seed data",
+      "effort": "2-3 hours",
+      "delivers": "All tables created. 3-5 projects seeded. Ready for data.",
+      "status": "next"
+    },
+    "phase_2": {
+      "name": "Open Brain MCP server (Edge Function)",
+      "effort": "2 hours",
+      "delivers": "capture_thought, search_thoughts, list_thoughts, thought_stats working. OpenRouter for embeddings.",
+      "depends_on": "Phase 1"
+    },
+    "phase_3": {
+      "name": "Connect LLMs via MCP",
+      "effort": "1-2 hours",
+      "delivers": "Claude Desktop, Claude Code, ChatGPT connected and tested. Each can save and search thoughts.",
+      "depends_on": "Phase 2"
+    },
+    "phase_4": {
+      "name": "First real weekly digest",
+      "effort": "30 minutes",
+      "delivers": "Proof the system works. 10-15 real thoughts captured, one real digest generated.",
+      "depends_on": "Phase 3",
+      "gate": "DO NOT proceed to Phase 5 until you have done at least 2 weekly digests with real data."
+    },
+    "phase_5": {
+      "name": "Minimal web dashboard",
+      "effort": "4-6 hours",
+      "delivers": "Project list page + project detail page (reuse existing design). Quick capture form. Hosted on GitHub Pages.",
+      "depends_on": "Phase 4 gate passed",
+      "reuses": "project-detail.html design system and component patterns"
+    },
+    "phase_6": {
+      "name": "Extended MCP tools for PM",
+      "effort": "3-4 hours",
+      "delivers": "get_project, update_project, add_task, complete_task MCP tools. LLMs can now manage projects, not just thoughts.",
+      "depends_on": "Phase 5"
+    },
+    "phase_7": {
+      "name": "Mac Mini local inference",
+      "effort": "4-6 hours",
+      "delivers": "Ollama handles embeddings and classification locally. OpenRouter dependency removed. File watcher for bulk ingestion.",
+      "depends_on": "Phase 6 + proven need (50+ thoughts/week OR OpenRouter cost >$5/month)",
+      "status": "deferred"
+    },
+    "phase_8": {
+      "name": "Dashboard modules (earned)",
+      "effort": "2-4 hours each",
+      "delivers": "Calendar, roadmap, contact register, content pipeline, search — each built only when pain is felt",
+      "depends_on": "Active usage for 4-6 weeks",
+      "status": "deferred"
+    },
+    "phase_9": {
+      "name": "Kindling bridge",
+      "effort": "3-4 hours",
+      "delivers": "Contact network integration between OpenMind contacts table and Kindling repo",
+      "depends_on": "Phase 8 contacts module",
+      "status": "deferred"
+    }
+  },
+
+  "explicitly_deferred": [
+    "Mac Mini local inference (until proven cost need)",
+    "Authentication / multi-user",
+    "Voice memo transcription",
+    "Calendar or email integration",
+    "Mobile native app",
+    "Azure Blob storage",
+    "Custom graph visualization",
+    "Obsidian or any note-taking app",
+    "Dashboard modules beyond project list/detail",
+    "File watcher ingestion"
+  ],
+
+  "cost_summary": {
+    "supabase_free_tier": "$0/month",
+    "open_brain_mcp": "$0/month",
+    "openrouter_embeddings": "$0.10-0.30/month",
+    "github_pages_hosting": "$0/month",
+    "existing_llm_subscriptions": "Already paying",
+    "total_new_cost": "~$0.30/month"
+  },
+
+  "success_metrics": {
+    "system_running": [
+      "5+ thoughts captured per week",
+      "All primary LLMs connected via MCP",
+      "1 weekly digest generated per week",
+      "Dashboard loads with real project data"
+    ],
+    "system_working": [
+      "Reused a past insight in a real conversation",
+      "Found a thought from a different LLM session",
+      "Made a decision faster because of retrieved context",
+      "Published 1 content asset per week",
+      "Reduced 'I know I thought about this somewhere' moments",
+      "Clearer positioning visible in monthly reviews"
+    ]
+  },
+
+  "anti_patterns": [
+    "Building dashboard modules before capturing 50+ real thoughts",
+    "Adding Mac Mini complexity before proving the basic flow works",
+    "Burning LLM tokens on housekeeping (embedding, tagging, filing)",
+    "Treating the dashboard as the project instead of the means",
+    "Designing for multi-user before single-user is validated",
+    "Skipping weekly reviews — no review cadence = dead system",
+    "Too many thought types at launch — start with insight, decision, task, idea"
+  ],
+
+  "architecture_heritage": {
+    "knowledge_os_v1": {
+      "kept": "Career intelligence focus, weekly digest template, content pipeline concept, anti-patterns, operating cadence",
+      "dropped": "OneDrive as primary store, Graphify dependency, markdown-first dogma, folder-based organization"
+    },
+    "openmind_v1": {
+      "kept": "Mac Mini local inference (deferred), intelligence-at-ingestion principle, database schema thinking, project-centric data model",
+      "dropped": "Custom Node.js server as core (now Edge Function), building everything from scratch, Tailscale complexity, immediate local-first requirement"
+    },
+    "open_brain": {
+      "kept": "Supabase architecture, MCP protocol, multi-LLM memory, semantic search, community-proven patterns",
+      "dropped": "thoughts-only data model (extended with relational PM tables), OpenRouter as permanent solution (will move to local)"
+    },
+    "sprint_platform": {
+      "kept": "Design system, GitHub Pages hosting, Supabase client patterns, project detail page components",
+      "dropped": "Session-based data model, Cloudflare Worker gateway (replaced by Supabase Edge Functions)"
+    }
+  },
+
+  "existing_tools": {
+    "sprint_platform": "https://blackmath88.github.io/onehour-minisprint/",
+    "kindling": "https://github.com/achimimboden/kindling",
+    "supabase_project": "Same project as sprint platform — shared infrastructure"
+  },
+
+  "open_questions": [
+    "Supabase project URL and keys (needed for MCP Edge Function deployment)",
+    "OpenRouter API key (needed for initial embeddings)",
+    "Which 3-5 active projects to seed the database with?",
+    "Preferred Slack workspace for capture channel (or skip to Telegram)?",
+    "Claude Desktop vs claude.ai — which is primary daily driver for MCP?"
+  ]
+}
